@@ -12,45 +12,41 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-	
 
 	@Autowired
-    private UserDetailsService userDetailsService;
+	private UserDetailsService userDetailsService;
 
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-    
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
+	@Bean
+	public BCryptPasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
-        auth.authenticationProvider(authenticationProvider());
-    }
+	@Bean
+	public DaoAuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+		authProvider.setUserDetailsService(userDetailsService);
+		authProvider.setPasswordEncoder(passwordEncoder());
+		return authProvider;
+	}
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests().antMatchers("/questionTypes/admin", "/users/adminList", "/users/addAdminForm").hasRole("ADMIN")
-                .and()
-                .authorizeRequests().antMatchers("/wallPage", "/questions/add", "/questionTypes", "/profile/*", "/answers/**").hasAnyRole("ADMIN", "USER")
-                .and()
-                .authorizeRequests().antMatchers("/login", "/resource/**").permitAll()
-                .and()
-                .formLogin().loginPage("/login").usernameParameter("username").passwordParameter("password").permitAll()
-                .loginProcessingUrl("/doLogin")
-                .successForwardUrl("/postLogin")
-                .failureUrl("/loginFailed")
-                .and()
-                .logout().logoutUrl("/doLogout").logoutSuccessUrl("/logout").permitAll()
-                .and()
-                .csrf().disable();
-    }
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) { //
+		auth.authenticationProvider(authenticationProvider());
+	}
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.
+		authorizeRequests().antMatchers("/login", "/resource/**","/h2/**").permitAll().
+		anyRequest().authenticated()
+        .and()
+        .formLogin().usernameParameter("username").passwordParameter("password").permitAll()
+        .loginProcessingUrl("/doLogin")
+        .successForwardUrl("/postLogin")
+        .failureUrl("/loginFailed")
+        .and()
+        .logout().logoutUrl("/doLogout").logoutSuccessUrl("/logout").permitAll()
+        .and()
+        .csrf().disable().headers().frameOptions().disable();
+	}
 }
